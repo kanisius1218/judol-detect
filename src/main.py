@@ -14,17 +14,17 @@ from datetime import datetime
 from typing import Dict, List, Optional
 from dotenv import load_dotenv
 
-from core_detector import SpamDetector
-from database import DatabaseManager
-from youtube_adapter import YouTubeAdapter
-from instagram_adapter import InstagramAdapter
+from .core_detector import SpamDetector
+from .database import DatabaseManager
+from .youtube_adapter import YouTubeAdapter
+from .instagram_adapter import InstagramAdapter
 
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('spam_moderator.log'),
+        logging.FileHandler('logs/spam_moderator.log'),
         logging.StreamHandler(sys.stdout)
     ]
 )

@@ -3,6 +3,8 @@
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Production--Ready-success.svg)]()
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/yourusername/judol-delet-msg/graphs/commit-activity)
 
 Bot otomatis untuk mendeteksi dan menghapus spam komentar judi online di **YouTube** dan **Instagram**.
 
@@ -217,14 +219,16 @@ pip install -r requirements.txt
 
 See [Full Documentation](docs/README.md#troubleshooting) for more.
 
-## 📊 Statistics
+## 📊 Project Statistics
 
 - **Total Code**: 5000+ lines
-- **Documentation**: 2000+ lines
-- **Files**: 17 files
+- **Documentation**: 2500+ lines  
+- **Files**: 25+ files
 - **Platforms**: 2 (YouTube, Instagram)
 - **Detection Methods**: 10+
 - **Keywords**: 50+
+- **Test Coverage**: Comprehensive
+- **Languages**: Python 3.8+
 
 ## 🤝 Contributing
 
