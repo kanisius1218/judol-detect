@@ -1,0 +1,19 @@
+# Core Dependencies
+google-api-python-client==2.108.0
+google-auth==2.25.2
+google-auth-oauthlib==1.2.0
+google-auth-httplib2==0.2.0
+
+# Instagram (Facebook Graph API)
+requests==2.31.0
+
+# Database
+# sqlite3 is built-in Python
+
+# Utilities
+python-dotenv==1.0.0
+schedule==1.2.0
+
+# Optional: TikTok (Unofficial - NOT RECOMMENDED)
+# TikTokApi==6.2.0
+# playwright==1.40.0
