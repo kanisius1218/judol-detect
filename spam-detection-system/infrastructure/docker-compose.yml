@@ -1,0 +1,20 @@
+version: "3.9"
+services:
+  api:
+    build: ../backend
+    env_file:
+      - ../backend/.env.example
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+  frontend:
+    build: ../frontend
+    ports:
+      - "4173:4173"
+    depends_on:
+      - api
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
