@@ -13,6 +13,7 @@ import time
 from datetime import datetime
 from typing import Dict, List, Optional
 from dotenv import load_dotenv
+from jinja2 import Environment, FileSystemLoader
 
 from .core_detector import SpamDetector
 from .database import DatabaseManager
@@ -53,6 +54,9 @@ class SpamModeratorBot:
         logger.info("=" * 70)
         logger.info("MULTI-PLATFORM SPAM MODERATOR")
         logger.info("=" * 70)
+
+        # Setup Jinja2
+        self.jinja_env = Environment(loader=FileSystemLoader('templates'))
         
         # Load configuration
         load_dotenv(config_file)
@@ -96,8 +100,7 @@ class SpamModeratorBot:
             
             # YouTube
             'youtube_enabled': os.getenv('YOUTUBE_ENABLED', 'false').lower() == 'true',
-            'youtube_api_key': os.getenv('YOUTUBE_API_KEY'),
-            'youtube_channel_id': os.getenv('YOUTUBE_CHANNEL_ID'),
+            'youtube_client_secret_file': os.getenv('YOUTUBE_CLIENT_SECRET_FILE', 'client_secret.json'),
             
             # Instagram
             'instagram_enabled': os.getenv('INSTAGRAM_ENABLED', 'false').lower() == 'true',
@@ -112,19 +115,18 @@ class SpamModeratorBot:
         
         # YouTube
         if self.config['youtube_enabled']:
-            if self.config['youtube_api_key'] and self.config['youtube_channel_id']:
+            if self.config['youtube_client_secret_file']:
                 try:
                     self.adapters['youtube'] = YouTubeAdapter(
-                        api_key=self.config['youtube_api_key'],
+                        client_secret_file=self.config['youtube_client_secret_file'],
                         detector=self.detector,
-                        database=self.database,
-                        channel_id=self.config['youtube_channel_id']
+                        database=self.database
                     )
-                    logger.info("✅ YouTube adapter initialized")
+                    logger.info("YouTube adapter initialized")
                 except Exception as e:
-                    logger.error(f"❌ Failed to initialize YouTube adapter: {e}")
+                    logger.error(f"Failed to initialize YouTube adapter: {e}")
             else:
-                logger.warning("⚠️  YouTube enabled but API key/channel ID missing")
+                logger.warning("YouTube enabled but client secret file path is missing in .env")
         
         # Instagram
         if self.config['instagram_enabled']:
@@ -281,12 +283,56 @@ class SpamModeratorBot:
                     f"{checked} checked, {spam} spam, {deleted} deleted"
                 )
         
-        logger.info("-" * 70)
-        logger.info(
-            f"  TOTAL: "
-            f"{total_checked} checked, {total_spam} spam, {total_deleted} deleted"
+        # Generate HTML report
+        summary_data = {
+            'results': [],
+            'total_checked': total_checked,
+            'total_spam': total_spam,
+            'total_deleted': total_deleted
+        }
+        for result in results:
+            if result['status'] == 'success':
+                summary_data['results'].append({
+                    'platform': result.get('platform', 'unknown'),
+                    'checked': result.get('checked', result.get('comments_checked', 0)),
+                    'spam': result.get('spam_found', 0),
+                    'deleted': result.get('deleted', 0)
+                })
+        
+        self.generate_html_report(
+            template_name='report_template.html',
+            title='Moderation Summary',
+            data={'summary': summary_data}
         )
-        logger.info("=" * 70)
+
+    def generate_html_report(self, template_name: str, title: str, data: Dict) -> None:
+        """
+        Generate an HTML report from a template.
+
+        Args:
+            template_name: The name of the template file.
+            title: The title of the report.
+            data: The data to render in the template.
+        """
+        try:
+            template = self.jinja_env.get_template(template_name)
+            
+            # Render the template
+            output = template.render(
+                title=title,
+                generated_on=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                **data
+            )
+            
+            # Save the report
+            report_path = os.path.join('reports', f"{title.lower().replace(' ', '_')}.html")
+            with open(report_path, 'w', encoding='utf-8') as f:
+                f.write(output)
+            
+            logger.info(f"HTML report generated: {report_path}")
+            
+        except Exception as e:
+            logger.error(f"Failed to generate HTML report: {e}")
     
     # ========================================================================
     # STATISTICS & MONITORING
@@ -328,6 +374,13 @@ class SpamModeratorBot:
         """Print formatted statistics."""
         stats = self.get_statistics(days=days)
         
+        # Generate HTML report
+        self.generate_html_report(
+            template_name='report_template.html',
+            title=f'Statistics Report ({days} Days)',
+            data={'stats': stats, 'days': days}
+        )
+
         print("\n" + "=" * 70)
         print(f"STATISTICS ({days} DAYS)")
         print("=" * 70)

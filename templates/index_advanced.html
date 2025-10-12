@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Message Detection System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_advanced.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header with Auth -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <h1 class="logo">🛡️ Advanced Detection System</h1>
+                    <p class="subtitle">AI-Powered Spam & Judi Online Detection</p>
+                </div>
+                <div class="auth-section">
+                    {% if current_user.is_authenticated %}
+                        <div class="user-info">
+                            <img src="{{ current_user.picture }}" alt="Profile" class="user-avatar">
+                            <span class="user-name">{{ current_user.name }}</span>
+                            <a href="{{ url_for('logout') }}" class="btn btn-small btn-secondary">Logout</a>
+                        </div>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="btn btn-google">
+                            <img src="https://www.google.com/favicon.ico" alt="Google" width="20">
+                            Sign in with Google
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Navigation Tabs -->
+        <nav class="main-nav">
+            <button class="nav-tab active" data-tab="detection">Message Detection</button>
+            <button class="nav-tab" data-tab="social">Social Media Analysis</button>
+            <button class="nav-tab" data-tab="research">Account Research</button>
+            <button class="nav-tab" data-tab="dashboard">Dashboard</button>
+        </nav>
+
+        <!-- Tab Contents -->
+        <main class="main-content">
+            <!-- Detection Tab -->
+            <section id="detection-tab" class="tab-content active">
+                <div class="detection-grid">
+                    <!-- Input Section -->
+                    <div class="detection-input">
+                        <h2>🔍 Detect Message Category</h2>
+                        <textarea id="messageInput" 
+                                  placeholder="Enter message to analyze for spam, judi online, or legitimate content..."
+                                  rows="8"></textarea>
+                        <div class="input-controls">
+                            <span id="charCount" class="char-count">0 characters</span>
+                            <div class="button-group">
+                                <button id="detectBtn" class="btn btn-primary">
+                                    Analyze Message
+                                </button>
+                                <button id="clearBtn" class="btn btn-secondary">Clear</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Result Section -->
+                    <div class="detection-result">
+                        <h3>📊 Analysis Result</h3>
+                        <div id="resultCard" class="result-card" style="display: none;">
+                            <div class="category-badge">
+                                <span id="categoryLabel"></span>
+                                <span id="confidenceScore"></span>
+                            </div>
+                            <div class="characteristics">
+                                <h4>Message Characteristics:</h4>
+                                <ul id="characteristicsList"></ul>
+                            </div>
+                            {% if current_user.is_authenticated %}
+                            <div class="action-buttons">
+                                <button id="deleteSpamBtn" class="btn btn-danger" style="display: none;">
+                                    🗑️ Auto Delete All Spam
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category Statistics -->
+                <div class="category-stats">
+                    <h3>📈 Detection Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">📧</div>
+                            <div class="stat-value" id="totalMessages">0</div>
+                            <div class="stat-label">Total Messages</div>
+                        </div>
+                        <div class="stat-card spam">
+                            <div class="stat-icon">🚫</div>
+                            <div class="stat-value" id="spamCount">0</div>
+                            <div class="stat-label">Spam Detected</div>
+                        </div>
+                        <div class="stat-card judi">
+                            <div class="stat-icon">🎰</div>
+                            <div class="stat-value" id="judiCount">0</div>
+                            <div class="stat-label">Judi Online</div>
+                        </div>
+                        <div class="stat-card clean">
+                            <div class="stat-icon">✅</div>
+                            <div class="stat-value" id="cleanCount">0</div>
+                            <div class="stat-label">Clean Messages</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Social Media Analysis Tab -->
+            <section id="social-tab" class="tab-content">
+                <div class="social-analysis">
+                    <h2>🌐 Social Media Comment Analysis</h2>
+                    <p class="description">Analyze comments from Instagram, X (Twitter), YouTube, or TikTok posts</p>
+                    
+                    <div class="url-input-section">
+                        <input type="url" 
+                               id="socialUrl" 
+                               placeholder="Paste social media post URL (Instagram, X, YouTube, TikTok)"
+                               class="url-input">
+                        <button id="analyzeUrlBtn" class="btn btn-primary">
+                            Analyze Comments
+                        </button>
+                    </div>
+
+                    <div id="urlAnalysisResult" class="analysis-result" style="display: none;">
+                        <h3>Analysis Results</h3>
+                        <div class="platform-info">
+                            <span id="platformName" class="platform-badge"></span>
+                            <span id="analysisDate" class="date"></span>
+                        </div>
+                        
+                        <div class="comment-stats">
+                            <div class="stat-row">
+                                <span class="stat-label">Total Comments:</span>
+                                <span id="totalComments" class="stat-value">0</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Spam Comments:</span>
+                                <span id="spamComments" class="stat-value spam">0</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Judi Comments:</span>
+                                <span id="judiComments" class="stat-value judi">0</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Spam Percentage:</span>
+                                <span id="spamPercentage" class="stat-value">0%</span>
+                            </div>
+                        </div>
+
+                        <div class="sample-comments">
+                            <h4>Sample Analyzed Comments:</h4>
+                            <div id="sampleCommentsList"></div>
+                        </div>
+
+                        <div class="top-spammers">
+                            <h4>Top Spam Accounts:</h4>
+                            <div id="topSpammersList"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Account Research Tab -->
+            <section id="research-tab" class="tab-content">
+                <div class="account-research">
+                    <h2>🔬 Spam Account Research</h2>
+                    <p class="description">Deep dive into spam account patterns and behavior</p>
+                    
+                    <div class="research-input">
+                        <select id="platformSelect" class="platform-select">
+                            <option value="">Select Platform</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="twitter">X (Twitter)</option>
+                            <option value="youtube">YouTube</option>
+                            <option value="tiktok">TikTok</option>
+                        </select>
+                        <input type="text" 
+                               id="usernameInput" 
+                               placeholder="Enter username to research"
+                               class="username-input">
+                        <button id="researchBtn" class="btn btn-primary">
+                            Research Account
+                        </button>
+                    </div>
+
+                    <div id="researchResult" class="research-result" style="display: none;">
+                        <h3>Account Analysis</h3>
+                        <div class="account-info">
+                            <div class="account-header">
+                                <span id="accountPlatform" class="platform-badge"></span>
+                                <span id="accountUsername" class="username"></span>
+                                <span id="riskScore" class="risk-badge"></span>
+                            </div>
+                            
+                            <div class="account-stats">
+                                <div class="stat-item">
+                                    <label>Spam Count:</label>
+                                    <span id="accountSpamCount">0</span>
+                                </div>
+                                <div class="stat-item">
+                                    <label>Judi Count:</label>
+                                    <span id="accountJudiCount">0</span>
+                                </div>
+                                <div class="stat-item">
+                                    <label>First Seen:</label>
+                                    <span id="firstSeen">-</span>
+                                </div>
+                                <div class="stat-item">
+                                    <label>Last Seen:</label>
+                                    <span id="lastSeen">-</span>
+                                </div>
+                            </div>
+
+                            <div class="account-patterns">
+                                <h4>Detected Patterns:</h4>
+                                <div id="patternsList"></div>
+                            </div>
+
+                            <div class="risk-indicators">
+                                <h4>Risk Indicators:</h4>
+                                <div id="riskIndicatorsList"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top Spammers List -->
+                    <div class="top-spammers-section">
+                        <h3>🏆 Top Spam Accounts</h3>
+                        <div id="topSpammersTable"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Dashboard Tab -->
+            <section id="dashboard-tab" class="tab-content">
+                <div class="dashboard">
+                    <h2>📊 Personal Dashboard</h2>
+                    
+                    {% if current_user.is_authenticated %}
+                    <div class="user-dashboard">
+                        <div class="user-stats-grid">
+                            <div class="dashboard-card">
+                                <h3>Your Detection Stats</h3>
+                                <div class="user-stats">
+                                    <div class="stat-item">
+                                        <span class="label">Total Detections:</span>
+                                        <span id="userTotalDetections" class="value">0</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="label">Spam Found:</span>
+                                        <span id="userSpamCount" class="value">0</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="label">Judi Found:</span>
+                                        <span id="userJudiCount" class="value">0</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="label">Deleted:</span>
+                                        <span id="userDeletedCount" class="value">0</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="dashboard-card">
+                                <h3>Recent Analyses</h3>
+                                <div id="recentAnalysesList" class="recent-list"></div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-actions">
+                            <button id="deleteAllSpamBtn" class="btn btn-danger">
+                                🗑️ Delete All Spam & Judi
+                            </button>
+                            <button id="exportDataBtn" class="btn btn-secondary">
+                                📥 Export My Data
+                            </button>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="login-prompt">
+                        <p>Please sign in with Google to access your personal dashboard</p>
+                        <a href="{{ url_for('login') }}" class="btn btn-google">
+                            <img src="https://www.google.com/favicon.ico" alt="Google" width="20">
+                            Sign in with Google
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2024 Advanced Message Detection System | Powered by AI & Machine Learning</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app_advanced.js') }}"></script>
+</body>
+</html>

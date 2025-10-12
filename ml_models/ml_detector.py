@@ -6,6 +6,7 @@ Professional implementation with trained models
 import os
 import joblib
 import numpy as np
+import pandas as pd
 from typing import Dict, Optional, List
 from pathlib import Path
 from dataclasses import dataclass
@@ -76,7 +77,7 @@ class MLSpamDetector:
             vectorizer_path = Path(vectorizer_path)
             
             if not model_path.exists() or not vectorizer_path.exists():
-                print("⚠️  No trained model found. Please run train_model.py first.")
+                print("No trained model found. Please run train_model.py first.")
                 print("    Falling back to rule-based detection.")
                 return
             
@@ -85,13 +86,13 @@ class MLSpamDetector:
             self.vectorizer = joblib.load(vectorizer_path)
             self.model_name = self.model.__class__.__name__
             
-            print(f"✓ ML model loaded: {self.model_name}")
+            print(f"ML model loaded: {self.model_name}")
             print(f"  Model path: {model_path}")
             print(f"  Vectorizer path: {vectorizer_path}")
             print(f"  Threshold: {self.threshold}")
             
         except Exception as e:
-            print(f"❌ Error loading model: {e}")
+            print(f"Error loading model: {e}")
             print("    Falling back to rule-based detection.")
     
     def predict(self, text: str) -> MLPredictionResult:
@@ -131,7 +132,7 @@ class MLSpamDetector:
             )
             
         except Exception as e:
-            print(f"❌ ML prediction error: {e}")
+            print(f"ML prediction error: {e}")
             return self._fallback_prediction(text)
     
     def predict_batch(self, texts: List[str]) -> List[MLPredictionResult]:
@@ -174,7 +175,7 @@ class MLSpamDetector:
             return results
             
         except Exception as e:
-            print(f"❌ Batch prediction error: {e}")
+            print(f"Batch prediction error: {e}")
             return [self._fallback_prediction(text) for text in texts]
     
     def _fallback_prediction(self, text: str) -> MLPredictionResult:
@@ -242,7 +243,7 @@ class MLSpamDetector:
             }
             
         except Exception as e:
-            print(f"❌ Error getting feature importance: {e}")
+            print(f"Error getting feature importance: {e}")
             return None
     
     def update_threshold(self, new_threshold: float):
@@ -256,7 +257,7 @@ class MLSpamDetector:
             raise ValueError("Threshold must be between 0.0 and 1.0")
         
         self.threshold = new_threshold
-        print(f"✓ Threshold updated to {new_threshold}")
+        print(f"Threshold updated to {new_threshold}")
     
     def get_model_info(self) -> Dict:
         """
@@ -294,43 +295,47 @@ class MLSpamDetector:
 
 
 if __name__ == "__main__":
-    # Test the detector
+    # Test the detector with data from our dataset
     detector = MLSpamDetector()
     
-    # Test cases
-    test_texts = [
-        "slot gacor maxwin deposit 10rb",
-        "great video! thanks for sharing",
-        "togel online angka jitu",
-        "i really enjoyed this content",
-        "link alternatif situs judi"
-    ]
-    
+    # Load the dataset to test against
+    try:
+        dataset_path = Path(__file__).parent.parent / 'data' / 'dataset.csv'
+        df = pd.read_csv(dataset_path)
+        
+        # Get 5 random spam and 5 random ham comments
+        spam_samples = df[df['label'] == 'spam'].sample(n=5, random_state=42)
+        ham_samples = df[df['label'] == 'ham'].sample(n=5, random_state=42)
+        test_df = pd.concat([spam_samples, ham_samples])
+        
+    except Exception as e:
+        print(f"Could not load dataset for testing: {e}")
+        test_df = pd.DataFrame({
+            'text': [
+                "slot gacor maxwin deposit 10rb",
+                "great video! thanks for sharing",
+                "togel online angka jitu",
+                "i really enjoyed this content",
+                "link alternatif situs judi"
+            ],
+            'label': ['spam', 'ham', 'spam', 'ham', 'spam']
+        })
+
     print("\n" + "=" * 70)
-    print("ML SPAM DETECTOR TEST")
+    print("ML SPAM DETECTOR TEST ON DATASET SAMPLES")
     print("=" * 70)
     
-    for text in test_texts:
+    for index, row in test_df.iterrows():
+        text = row['text']
+        true_label = row['label']
+        
         result = detector.predict(text)
+        
+        prediction_status = "CORRECT" if (result.is_spam and true_label == 'spam') or (not result.is_spam and true_label == 'ham') else "WRONG"
+        
         print(f"\nText: {text}")
-        print(f"Spam: {result.is_spam}")
-        print(f"Confidence: {result.confidence:.4f}")
-        print(f"Spam Probability: {result.spam_probability:.4f}")
-        print(f"Model: {result.model_name}")
+        print(f"True Label: {true_label.upper()}")
+        print(f"Prediction: {'SPAM' if result.is_spam else 'HAM'} (Confidence: {result.confidence:.2f})")
+        print(f"Result: {prediction_status}")
     
-    # Show model info
     print("\n" + "=" * 70)
-    print("MODEL INFORMATION")
-    print("=" * 70)
-    info = detector.get_model_info()
-    for key, value in info.items():
-        print(f"{key}: {value}")
-    
-    # Show feature importance
-    importance = detector.get_feature_importance(top_n=10)
-    if importance:
-        print("\n" + "=" * 70)
-        print("TOP 10 IMPORTANT FEATURES")
-        print("=" * 70)
-        for feature, score in importance.items():
-            print(f"{feature}: {score:.4f}")

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Message Detection System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="logo">Message Detection System</h1>
+            <p class="subtitle">Advanced Spam & Ham Classification</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Detection Section -->
+            <section class="detection-section">
+                <div class="input-area">
+                    <h2>Check Message</h2>
+                    <textarea id="messageInput" 
+                              placeholder="Enter your message here to check if it's spam or ham..."
+                              rows="6"></textarea>
+                    <div class="button-group">
+                        <button id="detectBtn" class="btn btn-primary">
+                            <span class="btn-text">Analyze Message</span>
+                            <span class="loader" style="display: none;"></span>
+                        </button>
+                        <button id="clearBtn" class="btn btn-secondary">Clear</button>
+                    </div>
+                </div>
+
+                <!-- Result Display -->
+                <div id="resultArea" class="result-area" style="display: none;">
+                    <h3>Detection Result</h3>
+                    <div class="result-card">
+                        <div class="result-label">
+                            <span id="resultLabel" class="label"></span>
+                            <span id="confidenceBar" class="confidence-bar">
+                                <span id="confidenceFill" class="confidence-fill"></span>
+                            </span>
+                        </div>
+                        <div class="result-details">
+                            <p>Confidence: <strong id="confidenceText">0%</strong></p>
+                            <p>Timestamp: <span id="timestamp"></span></p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Features Grid -->
+            <section class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Real-time Detection</h3>
+                    <p>Instant spam classification using advanced ML models</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>High Accuracy</h3>
+                    <p>Ensemble model with 95%+ accuracy rate</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Fast Processing</h3>
+                    <p>Sub-second response time for instant results</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Privacy First</h3>
+                    <p>No data storage, all processing done locally</p>
+                </div>
+            </section>
+
+            <!-- Batch Processing -->
+            <section class="batch-section">
+                <h2>Batch Processing</h2>
+                <div class="batch-input">
+                    <textarea id="batchInput" 
+                              placeholder="Enter multiple messages (one per line)..."
+                              rows="8"></textarea>
+                    <button id="batchBtn" class="btn btn-primary">Process Batch</button>
+                </div>
+                <div id="batchResults" class="batch-results" style="display: none;">
+                    <h3>Batch Results</h3>
+                    <div id="batchResultsList"></div>
+                </div>
+            </section>
+
+            <!-- Statistics -->
+            <section class="stats-section">
+                <h2>Session Statistics</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalChecks">0</div>
+                        <div class="stat-label">Total Checks</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value spam" id="spamCount">0</div>
+                        <div class="stat-label">Spam Detected</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value ham" id="hamCount">0</div>
+                        <div class="stat-label">Ham Detected</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="spamRate">0%</div>
+                        <div class="stat-label">Spam Rate</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- History -->
+            <section class="history-section">
+                <div class="history-header">
+                    <h2>Detection History</h2>
+                    <button id="clearHistoryBtn" class="btn btn-small">Clear History</button>
+                </div>
+                <div id="historyList" class="history-list">
+                    <p class="empty-state">No detection history yet</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2024 Message Detection System. Built with Flask & Machine Learning.</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

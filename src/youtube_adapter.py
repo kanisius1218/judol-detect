@@ -6,18 +6,76 @@ Menggunakan YouTube Data API v3
 """
 
 import logging
+import os
 from typing import List, Dict, Optional
 from datetime import datetime
 import time
 
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-from core_detector import SpamDetector, DetectionResult
-from database import DatabaseManager
+from src.core_detector import SpamDetector
+from src.database import DatabaseManager
 
 logger = logging.getLogger(__name__)
 
+# The scopes requested by the app.
+SCOPES = ['''https://www.googleapis.com/auth/youtube.force-ssl''']
+TOKEN_FILE = 'token.json'
+
+def get_authenticated_service(client_secret_file: str):
+    """
+    Get an authenticated YouTube API service instance using OAuth 2.0.
+    Handles token storage, refresh, and the initial user authorization flow.
+    """
+    creds = None
+    # The file token.json stores the user's access and refresh tokens, and is
+    # created automatically when the authorization flow completes for the first
+    # time.
+    if os.path.exists(TOKEN_FILE):
+        try:
+            creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
+        except Exception as e:
+            logger.error(f"Failed to load credentials from {TOKEN_FILE}: {e}")
+
+    # If there are no (valid) credentials available, let the user log in.
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            logger.info("Refreshing expired credentials...")
+            try:
+                creds.refresh(Request())
+            except Exception as e:
+                logger.error(f"Failed to refresh token: {e}. Please re-authenticate.")
+                creds = None # Force re-authentication
+        else:
+            logger.info("No valid credentials found. Starting authentication flow...")
+            if not os.path.exists(client_secret_file):
+                logger.error(f"OAuth client secret file not found at: {client_secret_file}")
+                logger.error("Please download it from Google Cloud Console and place it in the project root.")
+                raise FileNotFoundError(f"Client secret file not found: {client_secret_file}")
+            
+            flow = InstalledAppFlow.from_client_secrets_file(client_secret_file, SCOPES)
+            # The run_console() method opens a browser for the user to authorize
+            # and handles the token exchange.
+            creds = flow.run_console()
+        
+        # Save the credentials for the next run
+        try:
+            with open(TOKEN_FILE, 'w') as token:
+                token.write(creds.to_json())
+            logger.info(f"Credentials saved to {TOKEN_FILE}")
+        except Exception as e:
+            logger.error(f"Failed to save credentials to {TOKEN_FILE}: {e}")
+
+    try:
+        service = build('youtube', 'v3', credentials=creds)
+        logger.info("YouTube API client initialized successfully with OAuth.")
+        return service
+    except Exception as e:
+        logger.error(f"Failed to build YouTube service: {e}")
+        raise
 
 class YouTubeAdapter:
     """
@@ -32,32 +90,21 @@ class YouTubeAdapter:
     
     def __init__(
         self,
-        api_key: str,
+        client_secret_file: str,
         detector: SpamDetector,
-        database: DatabaseManager,
-        channel_id: Optional[str] = None
+        database: DatabaseManager
     ):
         """
         Initialize YouTube adapter.
         
         Args:
-            api_key: YouTube Data API key
+            client_secret_file: Path to the Google OAuth client secret JSON file.
             detector: SpamDetector instance
             database: DatabaseManager instance
-            channel_id: Your channel ID (optional, untuk filter)
         """
-        self.api_key = api_key
         self.detector = detector
         self.database = database
-        self.channel_id = channel_id
-        
-        # Build YouTube API client
-        try:
-            self.youtube = build('youtube', 'v3', developerKey=api_key)
-            logger.info("YouTube API client initialized")
-        except Exception as e:
-            logger.error(f"Failed to initialize YouTube API: {e}")
-            raise
+        self.youtube = get_authenticated_service(client_secret_file)
         
         # Statistics
         self.stats = {

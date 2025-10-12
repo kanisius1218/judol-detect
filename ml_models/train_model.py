@@ -73,7 +73,7 @@ class SpamMLTrainer:
         Returns:
             Tuple of (X_vectorized, y)
         """
-        print("📊 Preparing training data...")
+        print("Preparing training data...")
         
         # Initialize vectorizer with professional parameters
         self.vectorizer = TfidfVectorizer(
@@ -90,9 +90,9 @@ class SpamMLTrainer:
         X = self.vectorizer.fit_transform(texts)
         y = np.array(labels)
         
-        print(f"✓ Feature matrix shape: {X.shape}")
-        print(f"✓ Vocabulary size: {len(self.vectorizer.vocabulary_)}")
-        print(f"✓ Class distribution: {np.bincount(y)}")
+        print(f"Feature matrix shape: {X.shape}")
+        print(f"Vocabulary size: {len(self.vectorizer.vocabulary_)}")
+        print(f"Class distribution: {np.bincount(y)}")
         
         return X, y
     
@@ -115,7 +115,7 @@ class SpamMLTrainer:
         Returns:
             Dict with model comparison results
         """
-        print("\n🤖 Training multiple models...")
+        print("\nTraining multiple models...")
         
         models = {
             'Random Forest': RandomForestClassifier(
@@ -194,7 +194,7 @@ class SpamMLTrainer:
             y_train: Training labels
             model_type: Type of model to tune
         """
-        print(f"\n🔧 Hyperparameter tuning for {model_type}...")
+        print(f"\nHyperparameter tuning for {model_type}...")
         
         if model_type == 'random_forest':
             model = RandomForestClassifier(random_state=42, n_jobs=-1)
@@ -225,8 +225,8 @@ class SpamMLTrainer:
         
         grid_search.fit(X_train, y_train)
         
-        print(f"✓ Best parameters: {grid_search.best_params_}")
-        print(f"✓ Best F1 score: {grid_search.best_score_:.4f}")
+        print(f"Best parameters: {grid_search.best_params_}")
+        print(f"Best F1 score: {grid_search.best_score_:.4f}")
         
         return grid_search.best_estimator_
     
@@ -249,7 +249,7 @@ class SpamMLTrainer:
         Returns:
             Dict with evaluation metrics
         """
-        print("\n📈 Evaluating model...")
+        print("\nEvaluating model...")
         
         # Predictions
         y_pred = model.predict(X_test)
@@ -273,12 +273,12 @@ class SpamMLTrainer:
         if y_proba is not None:
             metrics['roc_auc'] = float(roc_auc_score(y_test, y_proba))
         
-        print(f"✓ Accuracy: {accuracy:.4f}")
-        print(f"✓ Precision: {precision:.4f}")
-        print(f"✓ Recall: {recall:.4f}")
-        print(f"✓ F1-Score: {f1:.4f}")
+        print(f"Accuracy: {accuracy:.4f}")
+        print(f"Precision: {precision:.4f}")
+        print(f"Recall: {recall:.4f}")
+        print(f"F1-Score: {f1:.4f}")
         if 'roc_auc' in metrics:
-            print(f"✓ ROC AUC: {metrics['roc_auc']:.4f}")
+            print(f"ROC AUC: {metrics['roc_auc']:.4f}")
         
         # Save plots
         if save_plots:
@@ -326,7 +326,7 @@ class SpamMLTrainer:
             plt.savefig(plot_dir / 'roc_curve.png', dpi=300)
             plt.close()
         
-        print(f"✓ Plots saved to {plot_dir}")
+        print(f"Plots saved to {plot_dir}")
     
     def save_model(self, model_name: str = "spam_detector"):
         """
@@ -361,9 +361,9 @@ class SpamMLTrainer:
         joblib.dump(self.model, latest_model)
         joblib.dump(self.vectorizer, latest_vectorizer)
         
-        print(f"\n✓ Model saved to {model_path}")
-        print(f"✓ Vectorizer saved to {vectorizer_path}")
-        print(f"✓ Metrics saved to {metrics_path}")
+        print(f"\nModel saved to {model_path}")
+        print(f"Vectorizer saved to {vectorizer_path}")
+        print(f"Metrics saved to {metrics_path}")
     
     def train_best_model(
         self,
@@ -406,7 +406,7 @@ class SpamMLTrainer:
         best_model_name = max(results.items(), key=lambda x: x[1]['f1_score'])[0]
         best_model = results[best_model_name]['model']
         
-        print(f"\n🏆 Best model: {best_model_name}")
+        print(f"\nBest model: {best_model_name}")
         
         # Hyperparameter tuning for best model (optional)
         if tune_hyperparameters and best_model_name in ['Random Forest', 'SVM']:
@@ -437,63 +437,56 @@ class SpamMLTrainer:
         }
 
 
-def create_training_dataset() -> Tuple[List[str], List[int]]:
+def load_dataset_from_csv(file_path: str) -> Tuple[List[str], List[int]]:
     """
-    Create training dataset from known spam/ham examples.
+    Load training dataset from a CSV file.
     
+    Args:
+        file_path: Path to the CSV file.
+        
     Returns:
         Tuple of (texts, labels)
     """
-    # Spam examples (label=1)
-    spam_examples = [
-        "slot gacor maxwin 1000x deposit 10rb",
-        "daftar link slot88 bonus new member 100%",
-        "togel online angka jitu prediksi akurat",
-        "casino online deposit via dana gopay",
-        "judi bola parlay menang terus",
-        "slot pragmatic jackpot besar pasti menang",
-        "link alternatif situs judi terpercaya",
-        "bonus freespin buy spin scatter hitam",
-        "rtp slot tinggi gacor hari ini",
-        "withdraw cepat tanpa ribet proses instant",
-        # Add more spam examples...
-    ]
-    
-    # Ham examples (label=0)
-    ham_examples = [
-        "great video! really enjoyed watching this",
-        "thanks for sharing this tutorial",
-        "can you make more videos like this?",
-        "subscribed! love your content",
-        "very informative and well explained",
-        "this helped me a lot, thank you!",
-        "amazing work, keep it up!",
-        "i learned something new today",
-        "please do more videos on this topic",
-        "best explanation i've found online",
-        # Add more ham examples...
-    ]
-    
-    texts = spam_examples + ham_examples
-    labels = [1] * len(spam_examples) + [0] * len(ham_examples)
-    
-    return texts, labels
+    print(f"Loading dataset from {file_path}...")
+    try:
+        df = pd.read_csv(file_path)
+        df = df.dropna(subset=['text', 'label'])
+        
+        texts = df['text'].astype(str).tolist()
+        # Convert labels to binary (1 for spam, 0 for ham)
+        labels = (df['label'].str.lower() == 'spam').astype(int).tolist()
+        
+        print(f"Dataset loaded: {len(texts)} samples")
+        print(f"Spam samples: {sum(labels)}")
+        print(f"Ham samples: {len(labels) - sum(labels)}")
+        
+        return texts, labels
+    except FileNotFoundError:
+        print(f"Error: Dataset file not found at {file_path}")
+        return [], []
+    except Exception as e:
+        print(f"Error loading dataset: {e}")
+        return [], []
 
 
 if __name__ == "__main__":
     # Create trainer
     trainer = SpamMLTrainer()
     
-    # Create or load training data
-    texts, labels = create_training_dataset()
+    # Load training data from CSV
+    dataset_path = Path(__file__).parent.parent / 'data' / 'dataset.csv'
+    texts, labels = load_dataset_from_csv(str(dataset_path))
     
-    # Train model
-    results = trainer.train_best_model(
-        texts=texts,
-        labels=labels,
-        test_size=0.2,
-        tune_hyperparameters=False
-    )
-    
-    print("\n📊 Training Results:")
-    print(json.dumps(results['all_results'], indent=2))
+    if not texts:
+        print("Aborting training due to dataset loading failure.")
+    else:
+        # Train model
+        results = trainer.train_best_model(
+            texts=texts,
+            labels=labels,
+            test_size=0.2,
+            tune_hyperparameters=False
+        )
+        
+        print("\nTraining Results:")
+        print(json.dumps(results.get('all_results', {}), indent=2))
