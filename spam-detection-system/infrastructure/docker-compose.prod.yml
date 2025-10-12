@@ -1,0 +1,14 @@
+version: "3.9"
+services:
+  api:
+    image: registry.example.com/spam-detection/api:latest
+    environment:
+      ENVIRONMENT: production
+    depends_on:
+      - redis
+  frontend:
+    image: registry.example.com/spam-detection/frontend:latest
+    depends_on:
+      - api
+  redis:
+    image: redis:7-alpine

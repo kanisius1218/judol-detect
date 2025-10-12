@@ -1,0 +1,1 @@
+"""Repositories encapsulating persistence logic."""
